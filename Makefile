@@ -1,8 +1,11 @@
 src_c = $(shell find src/ -name "*.c")
 src_cpp = $(shell find src/ -name "*.cpp")
 src_asm = $(shell find src/ -name "*.asm")
+boot_assembly = src/boot.s
+boot_obj = build/src/boot.o
 
 src = $(src_c) $(src_cpp)
+
 _obj = $(src_c:.c=.o) $(src_cpp:.cpp=.o)
 _obj_asm = $(src_asm:.asm=.o)
 
@@ -13,17 +16,38 @@ obj_asm = $(patsubst %,$(build_dir)/%,$(_obj_asm))
 
 target = i686-elf
 
-# Compile files
-compile:
-	$(info $(obj))
+CC = $(target)-g++
+CXX = $(target)-g++
+ASSEMBLER = nasm
+
+CFLAGS = -std=c++17 -ffreestanding -O0 -Wall -Wextra -fno-exceptions -fno-rtti -mgeneral-regs-only
+CXXFLAGS = -std=c++17 -ffreestanding -O0 -Wall -Wextra -fno-exceptions -fno-rtti -mgeneral-regs-only
+ASMFLAGS = -f elf
+QEMUFLAGS = -d guest_errors -d int -no-shutdown -no-reboot -monitor stdio
+
+INCLUDES = include/
+
+create_build_dir:
 	mkdir -p $(build_dir)
 	cp -r src/ $(build_dir)/src/
-	$(target)-as $(src_asm) -o $(obj_asm)
-	$(target)-g++ -c $(src) -o $(obj) -std=gnu99 -ffreestanding -O0 -Wall -Wextra -fno-exceptions -fno-rtti
+
+$(src_c):
+	$(CC) $(CFLAGS) -I $(INCLUDES) -c -o build/$(@:.c=.o) $@
+
+$(src_cpp):
+	$(CXX) $(CXXFLAGS) -I $(INCLUDES) -c -o build/$(@:.cpp=.o) $@
+
+$(src_asm):
+	$(ASSEMBLER) $(ASMFLAGS) $@ -o build/$(@:.asm=.o)
+
+# Compile files
+compile: create_build_dir $(src_asm) $(src_cpp) $(src_c)
+	$(info $(src_asm))
+	$(target)-as $(boot_assembly) -o $(boot_obj) 
 
 # Build kernel image
 link: compile
-	$(target)-g++ -T linker.ld -o $(build_dir)/myos.bin -ffreestanding -O0 -nostdlib $(obj) $(obj_asm) -lgcc
+	$(target)-g++ -T linker.ld -o $(build_dir)/myos.bin -ffreestanding -O0 -nostdlib $(obj) $(obj_asm) $(boot_obj) -lgcc
 
 # Build the grub iso
 build: link
@@ -33,8 +57,11 @@ build: link
 	grub-mkrescue -o $(build_dir)/myos.iso $(build_dir)/isodir
 
 run: build
-	qemu-system-i386 -cdrom $(build_dir)/myos.iso
+	qemu-system-i386 -cdrom $(build_dir)/myos.iso $(QEMUFLAGS)
 
-.PHONY: clean
+run_kernel: link
+	qemu-system-i386 -kernel $(build_dir)/myos.bin $(QEMUFLAGS)
+
+.PHONY: clean $(src_c) $(src_cpp) $(src_asm) compile
 clean:
 	rm -rf build/

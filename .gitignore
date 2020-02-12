@@ -1,1 +1,4 @@
 build/*
+serial.log
+.vscode
+
