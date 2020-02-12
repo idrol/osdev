@@ -33,8 +33,20 @@ public:
   static void writeline(const char* data);
   static void writestring(const char* data);
   static void write(const char* data, size_t size);
-  static void writeint(uint32_t num);
-  static void writehex(uint32_t num);
+
+  // Write uint as integer
+  static void writeint8(uint8_t num);
+  static void writeint16(uint16_t num);
+  static void writeint32(uint32_t num);
+  static void writeint64(uint64_t num);
+
+  // Write uint as hexadecimal
+  static void writehex8(uint8_t num);
+  static void writehex16(uint16_t num);
+  static void writehex32(uint32_t num);
+  static void writehex64(uint64_t num);
+
+
   static void newline();
   static void setColor(uint8_t color);
   static void enableCursor(uint8_t start, uint8_t end);

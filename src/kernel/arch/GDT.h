@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include "common/stdint.h"
 
 struct gdt_ptr_t {
     uint16_t limit;

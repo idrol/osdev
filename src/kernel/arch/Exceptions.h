@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include "common/stdint.h"
 
 typedef unsigned int uword_t __attribute__ ((mode (__word__)));
 

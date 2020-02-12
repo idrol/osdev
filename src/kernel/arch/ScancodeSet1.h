@@ -1,5 +1,5 @@
 #pragma once
-#include "kernel/ScancodeSet.h"
+#include "kernel/arch/ScancodeSet.h"
 
 class ScancodeSet1: public ScancodeSet {
 public:

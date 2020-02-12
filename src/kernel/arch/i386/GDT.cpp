@@ -1,4 +1,4 @@
-#include "kernel/GDT.h"
+#include "kernel/arch/GDT.h"
 
 gdt_entry_t GDT::gdt_entries[5];
 gdt_ptr_t GDT::gdt_ptr;

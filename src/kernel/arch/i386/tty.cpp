@@ -1,8 +1,8 @@
 #include <stdbool.h>
-#include <stdint.h>
-#include "kernel/tty.h"
+#include "common/stdint.h"
+#include "kernel/arch/tty.h"
 #include "kernel/KernelLib.h"
-#include "kernel/IO.h"
+#include "kernel/arch/IO.h"
 
 #if !defined(__i386__)
   #error "Trying to compile ix86-elf code without ix86-elf compatible compiler"
@@ -66,6 +66,7 @@ void Terminal::write(const char* data, size_t size) {
       column = 0;
       if(++row == VGA_HEIGHT) {
         row = 0;
+        clear();
       }
     } else {
       putchar(data[i]);
@@ -83,18 +84,53 @@ void Terminal::writestring(const char* data) {
   write(data, std::strlen(data));
 }
 
-void Terminal::writeint(uint32_t num) {
-  int len = 20;
+void Terminal::writeint8(uint8_t num) {
+  int len = 4;
   char c[len];
-  for(int i = 0; i < 20; i++) c[i] = ' ';
-  write(IO::itoa(num, c, 10), len);
+  writestring(IO::itoa(num, c, 10));
 }
 
-void Terminal::writehex(uint32_t num) {
+void Terminal::writehex8(uint8_t num) {
+  int len = 3;
+  char c[len];
+  writestring(IO::itoa(num, c, 16));
+}
+
+void Terminal::writeint16(uint16_t num) {
+  int len = 6;
+  char c[len];
+  writestring(IO::itoa(num, c, 10));
+}
+
+void Terminal::writehex16(uint16_t num) {
+  int len = 5;
+  char c[len];
+  writestring(IO::itoa(num, c, 16));
+}
+
+void Terminal::writeint32(uint32_t num) {
+  int len = 11;
+  char c[len];
+  writestring(IO::itoa(num, c, 10));
+}
+
+void Terminal::writehex32(uint32_t num) {
+  int len = 9;
+  char c[len];
+  write("0x", 2);
+  writestring(IO::itoa(num, c, 16));
+}
+
+void Terminal::writeint64(uint64_t num) {
   int len = 20;
   char c[len];
-  for(int i = 0; i < 20; i++) c[i] = ' ';
-  write(IO::itoa(num, c, 16), len);
+  writestring(IO::itoa(num, c, 10));
+}
+
+void Terminal::writehex64(uint64_t num) {
+  int len = 17;
+  char c[len];
+  writestring(IO::itoa(num, c, 16));
 }
 
 void Terminal::newline() {

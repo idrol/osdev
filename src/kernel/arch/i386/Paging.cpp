@@ -1,4 +1,4 @@
-#include "kernel/Paging.h"
+#include "kernel/arch/Paging.h"
 
 uint32_t Paging::pageDirectory[1024];
 

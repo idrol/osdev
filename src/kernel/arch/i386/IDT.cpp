@@ -1,7 +1,7 @@
-#include "kernel/IDT.h"
-#include "kernel/IO.h"
-#include "kernel/tty.h"
-#include "kernel/Keyboard.h"
+#include "kernel/arch/IDT.h"
+#include "kernel/arch/IO.h"
+#include "kernel/arch/tty.h"
+#include "kernel/arch/Keyboard.h"
 
 #define PIC1 0x20
 #define PIC2 0xA0

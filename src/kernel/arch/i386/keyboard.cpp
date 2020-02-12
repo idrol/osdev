@@ -1,7 +1,7 @@
-#include "kernel/Keyboard.h"
-#include "kernel/IO.h"
-#include "kernel/tty.h"
-#include "kernel/ScancodeSet1.h"
+#include "kernel/arch/Keyboard.h"
+#include "kernel/arch/IO.h"
+#include "kernel/arch/tty.h"
+#include "kernel/arch/ScancodeSet1.h"
 
 void(*Keyboard::key_pressed)(uint8_t) = nullptr;
 ScancodeSet Keyboard::scancodeSet;

@@ -1,6 +1,6 @@
 #pragma once
-#include <stdint.h>
-#include "kernel/ScancodeSet.h"
+#include "common/stdint.h"
+#include "kernel/arch/ScancodeSet.h"
 
 /**
  * Scan code set 1 primary key pressed codes from 0x01->0x58

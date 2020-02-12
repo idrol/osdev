@@ -1,6 +1,6 @@
-#include "kernel/Exceptions.h"
-#include "kernel/IDT.h"
-#include "kernel/tty.h"
+#include "kernel/arch/Exceptions.h"
+#include "kernel/arch/IDT.h"
+#include "kernel/arch/tty.h"
 
 __attribute__((interrupt)) void divideByZero(intframe_t *iframe) {
     Terminal::writeline("Divide by zero!!!");

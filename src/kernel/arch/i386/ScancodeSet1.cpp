@@ -1,5 +1,5 @@
-#include "kernel/ScancodeSet1.h"
-#include "kernel/tty.h"
+#include "kernel/arch/ScancodeSet1.h"
+#include "kernel/arch/tty.h"
 
 void ScancodeSet1::Initialize() {
     ScancodeSet::Initialize();

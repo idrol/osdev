@@ -20,12 +20,12 @@ CC = $(target)-g++
 CXX = $(target)-g++
 ASSEMBLER = nasm
 
-CFLAGS = -std=c++17 -ffreestanding -O0 -Wall -Wextra -fno-exceptions -fno-rtti -mgeneral-regs-only
-CXXFLAGS = -std=c++17 -ffreestanding -O0 -Wall -Wextra -fno-exceptions -fno-rtti -mgeneral-regs-only
+CFLAGS = -std=c++17 -O0 -Wall -Wextra -fno-exceptions -fno-rtti -mgeneral-regs-only
+CXXFLAGS = -std=c++17 -O0 -Wall -Wextra -fno-exceptions -fno-rtti -mgeneral-regs-only
 ASMFLAGS = -f elf
-QEMUFLAGS = -d guest_errors -d int -no-shutdown -no-reboot -monitor stdio
+QEMUFLAGS = -d guest_errors -d int -no-shutdown -no-reboot -monitor stdio -m 2G
 
-INCLUDES = include/
+INCLUDES = src/
 
 create_build_dir:
 	mkdir -p $(build_dir)
