@@ -1,6 +1,7 @@
 #include "kernel/arch/Exceptions.h"
 #include "kernel/arch/IDT.h"
 #include "kernel/arch/tty.h"
+#include "common/debug_config.h"
 
 __attribute__((interrupt)) void divideByZero(intframe_t *iframe) {
     Terminal::writeline("Divide by zero!!!");
@@ -61,7 +62,38 @@ __attribute__((interrupt)) void gpf(intframe_t *interrupt_frame, uword_t error_c
 }
 
 __attribute__((interrupt)) void page_fault(intframe_t *interrupt_frame, uword_t error_code) {
-    Terminal::writeline("Page fault");
+    bool present = interrupt_frame->error_code & 0x1; // If set the fault occured due to page protection. If not set the fault was cause by non present page
+    bool isWriteError = interrupt_frame->error_code & 0x1 << 1; // Indicates whethe this fault was caused by a write or read operation
+    // If i understood the documentation the flags bellow should only be accessed if you are sure about certain states in the cpu and present = true
+    bool isUser = interrupt_frame->error_code & 0x1 << 2; // The access level the code that caused this error had. This doesn't mean that it is a privilige error if this is true.
+    bool reserved_write = interrupt_frame->error_code & 0x1 << 3;
+    bool instruction_fetch = interrupt_frame->error_code & 0x1 << 4;
+    
+    #if DEBUG_VERBOSE
+    Terminal::writestring("Page Fault: ");
+    if(present) {
+        // Page protection error
+        // TODO add error checking for bit 2..4
+        if(isWriteError) {
+            Terminal::writeline("Tried to write to protected page!");
+        } else {
+            Terminal::writeline("Tried to read from protected page!");
+        }
+    } else {
+        // Page is not present error
+        if(isWriteError) {
+            Terminal::writeline("Tried to write to non existant page!");
+        } else {
+            Terminal::writeline("Tried to read from non existant page!");
+        }
+    }
+#else
+    Terminal::writeline("Page fault!");
+#endif
+
+    #if DEBUG_HLT_PAGE_FAULT
+    asm volatile("hlt");
+    #endif
 }
 
 __attribute__((interrupt)) void floating_point_exception(intframe_t *interrupt_frame) {

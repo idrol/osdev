@@ -6,6 +6,7 @@ ENTRY(_start)
    kernel image. */
 SECTIONS
 {
+	kernel_start = .; /* Start address of the kernel will be 0x0*/
 	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
 	   loaded at by the bootloader. */
 	. = 1M;
@@ -40,4 +41,6 @@ SECTIONS
  
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
+	
+	kernel_end = .;
 }

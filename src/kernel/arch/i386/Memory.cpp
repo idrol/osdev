@@ -1,5 +1,6 @@
 #include "kernel/arch/Memory.h"
 #include "kernel/arch/tty.h"
+#include "kernel/kernel.h"
 
 MemoryMap Memory::memoryMap;
 size_t Memory::upperMemorySize;
@@ -19,7 +20,14 @@ void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
     for(multiboot_mmap_entry* mmap_entry = memoryMap.map;
         (uint32_t)mmap_entry < (memoryMap.size);
         mmap_entry = (multiboot_memory_map_t*)((uint32_t)mmap_entry + mmap_entry->size + sizeof(mmap_entry->size))) {
-        if(mmap_entry->addrL == 0x100000) {
+
+        if(mmap_entry->addrL == 0xF00000 && mmap_entry->lenL == 0x100000 && mmap_entry->type == MULTIBOOT_MEMORY_RESERVED) {
+            // Detected ISA memory hole at 14Mib this kernel does not currently support that feature
+            Terminal::writeline("Physical memory manager detected the ISA memory hole at 4MiB. This is not supported please disable it in the BIOS");
+            kernel_panic();
+        }
+
+        if(mmap_entry->addrL == 0x100000 && mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
             // Upper memory section found
             // TODO check that a single segment struct can also fit
             if(mmap_entry->lenL < upperMemoryOffset) {
@@ -29,7 +37,7 @@ void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
                     
                 }
             }
-            firstSegment = (MemorySegment*)mmap_entry->addrL;
+            firstSegment = (MemorySegment*)mmap_entry->addrL + upperMemoryOffset;
             firstSegment->next = nullptr;
             firstSegment->prev = nullptr;
             firstSegment->allocated = false;
@@ -39,6 +47,10 @@ void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
             // Address to the free data in this segment is MemorySegment* + sizeof(MemorySegment)
         }
 
+    }
+    if(firstSegment == nullptr) {
+        Terminal::writeline("Physical memory manager could not detect any available memory above 1MiB");
+        kernel_panic();
     }
 }
 
