@@ -2,6 +2,7 @@
 #include "kernel/arch/IO.h"
 #include "kernel/arch/tty.h"
 #include "kernel/arch/Keyboard.h"
+#include "common/common.h"
 
 #define PIC1 0x20
 #define PIC2 0xA0
@@ -27,28 +28,27 @@ extern "C" void setIDT(uint32_t);
 
 __attribute__((interrupt)) void default_handler(intframe_t *iframe) {
     Terminal::writestring("Unregistered handler called!!!! Dumping frame\n");
-    int len = 20;
-    char c[20];
-    for(int i = 0; i < len; i++) c[i] = ' ';
-    Terminal::writestring("Error code 0x");
-    Terminal::write(IO::itoa(iframe->error_code, c, 16), len);
-    Terminal::write("\n", 1);
-    for(int i = 0; i < len; i++) c[i] = ' ';
-    Terminal::writestring("EIP 0x");
-    Terminal::write(IO::itoa(iframe->eip, c, 16), len);
-    Terminal::write("\n", 1);
-    for(int i = 0; i < len; i++) c[i] = ' ';
-    Terminal::writestring("CS 0x");
-    Terminal::write(IO::itoa(iframe->cs, c, 16), len);
-    Terminal::write("\n", 1);
-    for(int i = 0; i < len; i++) c[i] = ' ';
-    Terminal::writestring("EFLAGS 0x");
-    Terminal::write(IO::itoa(iframe->eflags, c, 16), len);
-    Terminal::write("\n", 1);
+    
+    
+    Terminal::writestring("Error code ");
+    Terminal::writehex32(iframe->error_code);
+    Terminal::newline();
+
+    Terminal::writestring("EIP ");
+    Terminal::writehex32(iframe->eip);
+    Terminal::newline();
+    
+    Terminal::writestring("CS ");
+    Terminal::writehex16(iframe->cs);
+    Terminal::newline();
+    
+    Terminal::writestring("EFLAGS ");
+    Terminal::writehex32(iframe->eflags);
+    Terminal::newline();
 }
 
 __attribute__((interrupt)) void irq_master_handler(intframe_t *iframe) {
-    uint16_t isr = IO::PIC_GET_ISR();
+    uint16_t isr = PIC::GetISR();
     if(isr & 0x0001) {
         
     } else if(isr & 0x0002) {
@@ -56,12 +56,12 @@ __attribute__((interrupt)) void irq_master_handler(intframe_t *iframe) {
     } else {
         Terminal::writestring("Unkown irq\n");
     }
-    IO::PICSendEOI(0);
+    PIC::SendEOI(0);
 }
 
 __attribute__((interrupt)) void irq_slave_handler(intframe_t *iframe) {
     Terminal::writestring("PIC Slave called\n");
-    IO::PICSendEOI(8);
+    PIC::SendEOI(8);
 }
 
 idt_entry_t IDT::idt_entries[256];

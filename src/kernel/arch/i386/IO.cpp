@@ -24,61 +24,23 @@ void IO::wait() {
                  "2:");
 }
 
-void IO::PICSendEOI(uint8_t irq) {
+void PIC::SendEOI(uint8_t irq) {
     if(irq >= 8) {
-        outb(PIC2, PIC_EOI);
+        IO::outb(PIC2, PIC_EOI);
     }
-    outb(PIC1, PIC_EOI);
+    IO::outb(PIC1, PIC_EOI);
 }
 
 void IO::Halt() {
     asm("HLT");
 }
 
-char* IO::itoa(uint32_t value, char * str, int base )
-{
-    char * rc;
-    char * ptr;
-    char * low;
-    // Check for supported base.
-    if ( base < 2 || base > 36 )
-    {
-        *str = '\0';
-        return str;
-    }
-    rc = ptr = str;
-    // Set '-' for negative decimals.
-    //if ( value < 0 && base == 10 )
-    //{
-    //    *ptr++ = '-';
-    //}
-    // Remember where the numbers start.
-    low = ptr;
-    // The actual conversion.
-    do
-    {
-        // Modulo is negative for negative value. This trick makes abs() unnecessary.
-        *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz"[35 + value % base];
-        value /= base;
-    } while ( value );
-    // Terminating the string.
-    *ptr-- = '\0';
-    // Invert the numbers.
-    while ( low < ptr )
-    {
-        char tmp = *low;
-        *low++ = *ptr;
-        *ptr-- = tmp;
-    }
-    return rc;
-}
-
-uint8_t IO::PIC_get_mask() {
-    uint8_t mask = inb(PIC1_DATA);
+uint8_t PIC::GetMask() {
+    uint8_t mask = IO::inb(PIC1_DATA);
     return mask;
 }
 
-void IO::PIC_set_mask(uint8_t irqLine) {
+void PIC::SetMask(uint8_t irqLine) {
     uint16_t port;
     uint8_t val;
 
@@ -88,11 +50,11 @@ void IO::PIC_set_mask(uint8_t irqLine) {
         port = PIC2_DATA;
         irqLine -= 8;
     }
-    val = inb(port) | (1 << irqLine);
-    outb(port, val);
+    val = IO::inb(port) | (1 << irqLine);
+    IO::outb(port, val);
 }
 
-void IO::PIC_clear_mask(uint8_t irqLine) {
+void PIC::ClearMask(uint8_t irqLine) {
     uint16_t port;
     uint8_t val;
 
@@ -102,20 +64,20 @@ void IO::PIC_clear_mask(uint8_t irqLine) {
         port = PIC2_DATA;
         irqLine -= 8;
     }
-    val = inb(port) & ~(1 << irqLine);
-    outb(port, val);
+    val = IO::inb(port) & ~(1 << irqLine);
+    IO::outb(port, val);
 }
 
-uint16_t IO::PIC_GET_IRQ_REG(int ocw3) {
-    outb(PIC1, ocw3);
-    outb(PIC2, ocw3);
-    return (inb(PIC2) << 8) | inb(PIC1);
+uint16_t PIC::GetIRQReg(int ocw3) {
+    IO::outb(PIC1, ocw3);
+    IO::outb(PIC2, ocw3);
+    return (IO::inb(PIC2) << 8) | IO::inb(PIC1);
 }
 
-uint16_t IO::PIC_GET_IRR() {
-    return PIC_GET_IRQ_REG(PIC_READ_IRR);
+uint16_t PIC::GetIRR() {
+    return GetIRQReg(PIC_READ_IRR);
 }
 
-uint16_t IO::PIC_GET_ISR() {
-    return PIC_GET_IRQ_REG(PIC_READ_ISR);
+uint16_t PIC::GetISR() {
+    return GetIRQReg(PIC_READ_ISR);
 }

@@ -1,9 +1,20 @@
 #Phyiscal Memory layout
 0->1MiB Unused/Reserved  
-1MiB->4MiB Reserved by kernel code  
-4MiB->2GiB Dynamic memory  
+1MiB->512MiB Reserved by kernel code and kernel structures for pages and such 
+512MiB-> Dynamic memory managed by memory allocator  
 
-Note this memory layout does not represent the actual memory layout on the physical machine as the BIOS allocates different regions bellow 1MiB and att the end of the available memory. The memory manager does not currently handle BIOS memory allocated att the end of memory so make sure you allocated a bit of extra memory above 2GiB. If you don't do this at frist everything will be fine but will be undefined behaviour once the memory allocator starts allocating chunks that conflict with bios reserved areas att the end of memory.
+Memory at 0 to 1MiB is unused because it can contain different memory mapped devices so to simplify the kernel unused space here is ignored.  
+All memory from 1MiB->512MiB is reserved by the kernel for kernel code, paging, processes and dynamic kernel memory such as drivers.
+Memory above 512MiB is avalable to userspace processes as virtualy mapped memory by a different memory allocator.
 
 The linker script exposes to variables to detect the size of the kernel code called kernel_start and kernel_end.  
 Note kernel_start will be 0x0 but in fact the actual kernel code starts att 0x100000
+
+#Memory allocators.
+The kernel contains 2 different memory allocators that manage seperat areas of memory.  
+The first allocator works with kernel reserved dynamic memory located in the 1MiB->512MiB range.  
+Note this allocator will start att a 4KiB aligned adress above 1MiB because the kernel code is loaded att 1MiB and takes up space that is defined att compile time and thus changes every time the code size increases and decreases.  
+
+The second memory allocator is the memory allocator designed for userspace processes and will always start att 512MiB and go upp to the highest allowed memory address that has not been reserved by the BIOS.
+
+#Paging and virtual addresses

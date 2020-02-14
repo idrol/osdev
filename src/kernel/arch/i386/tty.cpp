@@ -3,6 +3,7 @@
 #include "kernel/arch/tty.h"
 #include "kernel/KernelLib.h"
 #include "kernel/arch/IO.h"
+#include "common/common.h"
 
 #if !defined(__i386__)
   #error "Trying to compile ix86-elf code without ix86-elf compatible compiler"
@@ -20,7 +21,7 @@ void Terminal::initialize() {
   row = 0;
   column = 0;
   color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-  buffer = (uint16_t*) 0xB8000; // Predefined location in memory for the vga buffer
+  buffer = (uint16_t*) 0xC00B8000; // Predefined location in memory for the vga buffer
   // The size of the buffer is determined but the vga mode.
   // Default is 80x25
   clear();
@@ -87,50 +88,50 @@ void Terminal::writestring(const char* data) {
 void Terminal::writeint8(uint8_t num) {
   int len = 4;
   char c[len];
-  writestring(IO::itoa(num, c, 10));
+  writestring(itoa(num, c, 10));
 }
 
 void Terminal::writehex8(uint8_t num) {
   int len = 3;
   char c[len];
-  writestring(IO::itoa(num, c, 16));
+  writestring(itoa(num, c, 16));
 }
 
 void Terminal::writeint16(uint16_t num) {
   int len = 6;
   char c[len];
-  writestring(IO::itoa(num, c, 10));
+  writestring(itoa(num, c, 10));
 }
 
 void Terminal::writehex16(uint16_t num) {
   int len = 5;
   char c[len];
-  writestring(IO::itoa(num, c, 16));
+  writestring(itoa(num, c, 16));
 }
 
 void Terminal::writeint32(uint32_t num) {
   int len = 11;
   char c[len];
-  writestring(IO::itoa(num, c, 10));
+  writestring(itoa(num, c, 10));
 }
 
 void Terminal::writehex32(uint32_t num) {
   int len = 9;
   char c[len];
   write("0x", 2);
-  writestring(IO::itoa(num, c, 16));
+  writestring(itoa(num, c, 16));
 }
 
 void Terminal::writeint64(uint64_t num) {
   int len = 20;
   char c[len];
-  writestring(IO::itoa(num, c, 10));
+  writestring(itoa(num, c, 10));
 }
 
 void Terminal::writehex64(uint64_t num) {
   int len = 17;
   char c[len];
-  writestring(IO::itoa(num, c, 16));
+  writestring(itoa(num, c, 16));
 }
 
 void Terminal::newline() {

@@ -1,8 +1,6 @@
 #pragma once
 #include "common/stdint.h"
 
-typedef unsigned int uword_t __attribute__ ((mode (__word__)));
-
 class Exceptions {
     public:
     static void Initialize();

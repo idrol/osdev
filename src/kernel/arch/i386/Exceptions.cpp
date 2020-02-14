@@ -62,12 +62,13 @@ __attribute__((interrupt)) void gpf(intframe_t *interrupt_frame, uword_t error_c
 }
 
 __attribute__((interrupt)) void page_fault(intframe_t *interrupt_frame, uword_t error_code) {
-    bool present = interrupt_frame->error_code & 0x1; // If set the fault occured due to page protection. If not set the fault was cause by non present page
-    bool isWriteError = interrupt_frame->error_code & 0x1 << 1; // Indicates whethe this fault was caused by a write or read operation
+    // The address that caused this exception is stored in CR2 but we can only access it from assembly
+    bool present = error_code & 0x1; // If set the fault occured due to page protection. If not set the fault was cause by non present page
+    bool isWriteError = error_code & 0x1 << 1; // Indicates whethe this fault was caused by a write or read operation
     // If i understood the documentation the flags bellow should only be accessed if you are sure about certain states in the cpu and present = true
-    bool isUser = interrupt_frame->error_code & 0x1 << 2; // The access level the code that caused this error had. This doesn't mean that it is a privilige error if this is true.
-    bool reserved_write = interrupt_frame->error_code & 0x1 << 3;
-    bool instruction_fetch = interrupt_frame->error_code & 0x1 << 4;
+    bool isUser = error_code & 0x1 << 2; // The access level the code that caused this error had. This doesn't mean that it is a privilige error if this is true.
+    bool reserved_write = error_code & 0x1 << 3;
+    bool instruction_fetch = error_code & 0x1 << 4;
     
     #if DEBUG_VERBOSE
     Terminal::writestring("Page Fault: ");

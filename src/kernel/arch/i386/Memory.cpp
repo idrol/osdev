@@ -9,7 +9,7 @@ size_t Memory::availableMemory;
 size_t Memory::allocatedMemory;
 
 void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
-    memoryMap.map = (multiboot_memory_map_t*)mbd->mmap_addr;
+    memoryMap.map = (multiboot_memory_map_t*)(mbd->mmap_addr + 0xC0000000);
     memoryMap.length = mbd->mmap_length;
     memoryMap.size = mbd->mmap_addr + memoryMap.length;
     upperMemorySize = mbd->mem_upper;
@@ -18,7 +18,7 @@ void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
     allocatedMemory = 0;
 
     for(multiboot_mmap_entry* mmap_entry = memoryMap.map;
-        (uint32_t)mmap_entry < (memoryMap.size);
+        (uint32_t)mmap_entry < (memoryMap.size + 0xC0000000);
         mmap_entry = (multiboot_memory_map_t*)((uint32_t)mmap_entry + mmap_entry->size + sizeof(mmap_entry->size))) {
 
         if(mmap_entry->addrL == 0xF00000 && mmap_entry->lenL == 0x100000 && mmap_entry->type == MULTIBOOT_MEMORY_RESERVED) {
@@ -28,6 +28,7 @@ void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
         }
 
         if(mmap_entry->addrL == 0x100000 && mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            Terminal::writeline("Attempt alloc");
             // Upper memory section found
             // TODO check that a single segment struct can also fit
             if(mmap_entry->lenL < upperMemoryOffset) {
@@ -37,7 +38,7 @@ void Memory::Initialize(multiboot_info_t *mbd, uint32_t upperMemoryOffset) {
                     
                 }
             }
-            firstSegment = (MemorySegment*)mmap_entry->addrL + upperMemoryOffset;
+            firstSegment = (MemorySegment*)(mmap_entry->addrL + upperMemoryOffset + 0xC0000000);
             firstSegment->next = nullptr;
             firstSegment->prev = nullptr;
             firstSegment->allocated = false;

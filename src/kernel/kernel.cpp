@@ -22,20 +22,15 @@ extern "C" size_t kernel_start;
 extern "C" size_t kernel_end;
 
 void print_key(uint8_t scancode) {
-    if(scancode == KEY_W) {
-        char c = std::keycodeToChar(scancode);
-        char c2[12];
-        for(int i = 0; i < 12; i++) c2[i] = ' ';
-        IO::itoa(scancode, c2, 16);
-        Terminal::write(c2, 12);
-        Terminal::write(&c, 1);
-        Terminal::write(" was pressed\n", 13);
-        Terminal::writestring("Key w was pressed\n");
-    }
+    Terminal::writestring("Key ");
+    Terminal::writehex8(scancode);
+    Terminal::writeline(" was pressed");
 }
 
-void boot_kernel(multiboot_info_t *mbd) {
+void boot_kernel(multiboot_info_t *mbd, size_t kernel_size) {
     Terminal::initialize();
+    Terminal::writehex32((uint32_t)mbd);
+    Terminal::newline();
     Terminal::writeline("Initializing GDT");
     GDT::Initialize();
     Terminal::writeline("Initializing IDT");
@@ -46,19 +41,21 @@ void boot_kernel(multiboot_info_t *mbd) {
     Exceptions::Initialize();
     Terminal::writeline("Initializing PIC");
     IDT::PIC_REMAP(32, 40);
+    // Mask all interups. This disables all interupts from executing
     for(int i = 0; i < 16; i++) {
-      IO::PIC_set_mask(i);
+        PIC::SetMask(i);
     }
-    //IO::PIC_clear_mask(0); // Enable timer
-    //IO::PIC_clear_mask(1);
+    PIC::ClearMask(0); // Enable timer
+    PIC::ClearMask(1); // Enable keyboard inputs
 
+    // Paging is set up in the boot assembly to map the kernel into 0xC0000000
     //Terminal::writeline("Enabling paging");
     //Paging::Initialize();
 
     Terminal::writeline("Enabling interrupts");
     asm volatile("sti");
     Terminal::writeline("Initializing Memory");
-    Memory::Initialize(mbd, 0x300000); // Start memory managment at 0x400000
+    Memory::Initialize(mbd, kernel_size);
 
     Terminal::writeint32(Memory::GetAvailableMemory()/1024/1024);
     Terminal::writeline("MB of available memory");
@@ -71,24 +68,23 @@ void boot_kernel(multiboot_info_t *mbd) {
 }
 
 void kernel_main(multiboot_info_t *mbd, uint32_t magic) {
-    boot_kernel(mbd);
-
-    Terminal::writestring("Kernal main location: ");
-    Terminal::writehex32((uint32_t)&kernel_main);
-    Terminal::newline();
+    // kernel is mapped from 0x100000 to 0xc0100000
+    uint32_t kernelSize = (size_t)&kernel_end - (size_t)&kernel_start;
+    boot_kernel(mbd, kernelSize);
 
 #if 1
+    // Print debug information about how much space the kernel takes upp
     Terminal::writestring("Kernel loaded at ");
     Terminal::writehex32((size_t)&kernel_start);
     Terminal::writestring(" to ");
     Terminal::writehex32((size_t)&kernel_end);
-    uint32_t kernelSize = (size_t)&kernel_end - (size_t)&kernel_start;
     Terminal::writestring(" with a size of ");
-    Terminal::writeint32(kernelSize);
-    Terminal::writeline("b");
+    Terminal::writeint32(kernelSize/1024);
+    Terminal::writeline("KB");
 #endif
 
     #if 0
+    // Print debug information about loaded grub modules
     multiboot_module_t* module = (multiboot_module_t*)mbd->mods_addr;
     Terminal::writestring("Loaded modules ");
     Terminal::writeint32(mbd->mods_count);
@@ -102,6 +98,7 @@ void kernel_main(multiboot_info_t *mbd, uint32_t magic) {
     #endif
 
 #if 0
+    // Test memory allocation
     Terminal::writeline("Attempting to alloc 1KB");
     void* ptr = Memory::malloc(1024);
     Terminal::writestring("Allocated memory att pointer ");
@@ -110,6 +107,7 @@ void kernel_main(multiboot_info_t *mbd, uint32_t magic) {
 #endif
 
 #if 0
+    // Print out the grub magic variable and grub flags
     Terminal::writehex32(magic);
     Terminal::newline();
     Terminal::writehex32(mbd->flags);
@@ -125,5 +123,5 @@ void kernel_main(multiboot_info_t *mbd, uint32_t magic) {
 
 void kernel_panic() {
     Terminal::writeline("Something went horibly wrong PANIC");
-    asm volatile("hlt");
+    while(true) {}
 }

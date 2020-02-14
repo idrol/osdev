@@ -11,7 +11,11 @@ typedef __INT32_TYPE__ int32_t;
 typedef __INT64_TYPE__ int64_t;
 
 // Acrhitecture specific to x86 protected mode
-typedef uint32_t size_t;
 
-// For 64bit mode
-// typedef size_t uint64_t;
+#ifdef __x86_64__
+typedef uint64_t size_t;
+typedef uint64_t uword_t;
+#else
+typedef uint32_t size_t;
+typedef uint32_t uword_t;
+#endif
